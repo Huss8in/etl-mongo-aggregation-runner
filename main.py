@@ -43,7 +43,7 @@ def add_date_filter(pipeline, start_date=None, end_date=None):
         return [{"$match": {"createdAt": {"$gte": start_date, "$lt": end_date}}}] + pipeline
     return pipeline
 
-def fetch_and_process_data(json_file, key_name, df_name, start_date=None, end_date=None):
+def fetch_and_process_data(json_file, key_name, df_name, start_date=None, end_date=None, limit=None):
     collection_name, pipeline = load_pipeline(json_file, key_name)
     if collection_name and pipeline:
         pipeline = add_date_filter(pipeline, start_date, end_date)
@@ -51,14 +51,13 @@ def fetch_and_process_data(json_file, key_name, df_name, start_date=None, end_da
         print(f"Starting aggregation for: {key_name}")
         data = aggregate_mongo(collection_name, pipeline)
 
+        if limit:
+            data = data[:limit] 
+
         df = pd.DataFrame(data)
         if not df.empty:
             df = convert_objectid_to_str(df)
-
-        # Ensure 'CSVs' folder exists
         os.makedirs("CSVs", exist_ok=True)
-
-        # Save CSV
         csv_path = os.path.join("CSVs", f"{df_name}.csv")
         df.to_csv(csv_path, index=False)
         print(f"Saved CSV at: {csv_path}")
@@ -67,21 +66,27 @@ def fetch_and_process_data(json_file, key_name, df_name, start_date=None, end_da
     else:
         print(f"Skipping {key_name}: No collection or pipeline found.")
 
-def main(start_date=None, end_date=None):
+
+def main(start_date=None, end_date=None, limit=None):
     start_time = time.time()
 
     print("ETL Process Started...")
-    fetch_and_process_data("aggregation_pipelines.json", "bestselleritems", "bestseller_df", start_date, end_date)
+    fetch_and_process_data("aggregation_pipelines.json", "bestselleritems", "bestseller_df", start_date, end_date, limit)
 
     end_time = time.time()
     print(f"ETL Process Completed in {end_time - start_time:.2f} seconds.")
 
+
 if __name__ == "__main__":
     start_date = None
     end_date = None
+    limit = None
 
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
         start_date = datetime.strptime(sys.argv[1], "%d/%m/%Y")
         end_date = datetime.strptime(sys.argv[2], "%d/%m/%Y")
+    
+    if len(sys.argv) == 4:
+        limit = int(sys.argv[3])
 
-    main(start_date, end_date)
+    main(start_date, end_date, limit)

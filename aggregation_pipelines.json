@@ -65,9 +65,6 @@
         "$sort": {
           "totalQuantitySold": -1
         }
-      },
-      {
-        "$limit": 30
       }
     ],
     "collection": "Orders"
