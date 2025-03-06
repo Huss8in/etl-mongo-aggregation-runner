@@ -1,0 +1,75 @@
+{
+  "bestselleritems": {
+    "aggregation_pipeline": [
+      {
+        "$match": {
+          "lastStatus.status": { "$ne": -1 },
+          "lastStatus.name": { 
+            "$nin": ["Pending_Payment"]
+          }
+        }
+      },
+      {
+        "$unwind": "$items"
+      },
+      {
+        "$group": {
+          "_id": "$items._item",
+          "totalQuantitySold": { "$sum": "$items.quantity" },
+          "name": { "$first": "$items.name.en" },
+          "price": { "$first": "$items.price" },
+          "vendorId": { "$first": "$_vendor" }
+        }
+      },
+      {
+        "$lookup": {
+          "from": "Vendors",
+          "localField": "vendorId",
+          "foreignField": "_id",
+          "as": "vendorInfo"
+        }
+      },
+      {
+        "$unwind": {
+          "path": "$vendorInfo",
+          "preserveNullAndEmptyArrays": true
+        }
+      },
+      {
+        "$lookup": {
+          "from": "Items",
+          "localField": "_id",
+          "foreignField": "_id",
+          "as": "itemDetails"
+        }
+      },
+      {
+        "$unwind": {
+          "path": "$itemDetails",
+          "preserveNullAndEmptyArrays": true
+        }
+      },
+      {
+        "$project": {
+          "itemName": "$name",
+          "totalQuantitySold": 1,
+          "price": 1,
+          "vendorId": "$vendorInfo._id",
+          "vendorName": "$vendorInfo.name.en",
+          "vendorShoppingCategory": "$vendorInfo.shoppingCategory",
+          "itemCategory": "$itemDetails.data.shoppingCategory.en",
+          "itemSubcategory": "$itemDetails.data.shoppingSubcategory.en"
+        }
+      },
+      {
+        "$sort": {
+          "totalQuantitySold": -1
+        }
+      },
+      {
+        "$limit": 30
+      }
+    ],
+    "collection": "Orders"
+  }
+}
