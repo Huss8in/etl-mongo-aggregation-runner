@@ -12,7 +12,7 @@ This script runs MongoDB aggregation pipelines and exports results to CSV files.
 1. **Activate the virtual environment** (if not already activated):
    - On Windows (PowerShell):
 ```sh
-     .\venv\Scripts\Activate
+     source venv/Scripts/Activate
 ```
    - On macOS/Linux:
  ```sh
@@ -25,11 +25,11 @@ This script runs MongoDB aggregation pipelines and exports results to CSV files.
 ```
 
 3. **Run the script**:
-With a date range:
-   ```sh
-   python script.py "01/01/2024" "31/01/2024"
+   - With a date range
+```sh
+     python script.py "01/01/2024" "31/01/2024"
 ```
-Without dates (fetches all data):
-   ```sh
-   python script.py
-```
+   - Without dates (fetches all data):
+ ```sh
+     python script.py
+ ```
